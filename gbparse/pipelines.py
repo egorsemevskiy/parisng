@@ -14,7 +14,7 @@ class GbparsePipeline(object):
 
     def process_item(self, item, spider):
         database = mongo_client[spider.name]
-        collection = database['db_parse_27_01']
+        collection = database['db_parse_29_01']
         collection.insert_one(item)
         return item
 
