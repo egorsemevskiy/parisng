@@ -65,6 +65,7 @@ DEFAULT_REQUEST_HEADERS = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
+
     'avitoparser.pipelines.AvitoparserPipeline': 300,
 }
 

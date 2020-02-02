@@ -5,14 +5,14 @@ from scrapy.http import HtmlResponse
 from gbparse.items import AvitoItem
 
 
-
 class AvitoSpider(scrapy.Spider):
     name = 'avito'
     allowed_domains = ['avito.ru']
     start_urls = [f'https://www.avito.ru/sankt-peterburg/kvartiry?p={idx}' for idx in range(1, 101)]
 
-    def parse(self, response):
-        for url in response.xpath('//div[contains(@data-marker, "item")]/div[@class="item__line"]//h3/a[@itemprop="url"]'):
+    def parse(self, response: HtmlResponse):
+        for url in response.xpath(
+                '//div[contains(@data-marker, "item")]/div[@class="item__line"]//h3/a[@itemprop="url"]'):
             yield response.follow(url, callback=self.avd_parse)
 
     def avd_parse(self, response: HtmlResponse):
