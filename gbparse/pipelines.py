@@ -17,7 +17,7 @@ class GbparsePipeline(object):
 
     def process_item(self, item, spider):
         database = mongo_client[spider.name]
-        collection = database['db_parse_29_01']
+        collection = database[type(item).__name__]
         collection.insert_one(item)
         return item
 
@@ -51,6 +51,6 @@ class InstaPipeline(object):
 
     def process_item(self, item, spider):
         database = mongo_client[spider.name]
-        collection = database['db_parse_29_01']
+        collection = database[type(item).__name__]
         collection.insert_one(item)
         return item

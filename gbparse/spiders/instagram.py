@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import json
-import re
 from copy import deepcopy
-import scrapy
+import re
+import json
 from scrapy.http import HtmlResponse
-from gbparse.items import FollowersItem
+import scrapy
 from urllib.parse import urlencode
-
+from gbparse.items import FollowersItem
 
 HASHES = {
     'followers': 'c76146de99bb02f6415203be841dd25a',
@@ -21,21 +20,21 @@ HASHES = {
 class InstagramSpider(scrapy.Spider):
     name = 'instagram'
     allowed_domains = ['instagram.com']
-    start_urls = ['http://instagram.com/']
+    start_urls = ['https://instagram.com/']
     insta_login = 'amditech'
-    insta_pass = '567Instagram'
-    insta_login_link = 'https://www.instagram.com/accounts/login/ajax/'
-    parse_user = 'gefestart'
+    inst_pass = '567Instagram'
+    inst_login_link = 'https://www.instagram.com/accounts/login/ajax/'
+    parse_user = 'realdonaldtrump'
     graphql_url = 'https://www.instagram.com/graphql/query/?'
     user_data_hash = 'c9100bf9110dd6361671f113dd02e7d6'
 
-    def parse(self, response):
+    def parse(self, response: HtmlResponse):
         csrf_token = self.fetch_csrf_token(response.text)
         yield scrapy.FormRequest(
-            self.insta_login_link,
+            self.inst_login_link,
             method='POST',
             callback=self.user_parse,
-            formdata={'username': self.insta_login, 'password': self.insta_pass},
+            formdata={'username': self.insta_login, 'password': self.inst_pass},
             headers={'X-CSRFToken': csrf_token}
         )
 
@@ -50,23 +49,27 @@ class InstagramSpider(scrapy.Spider):
 
     def userdata_parse(self, response: HtmlResponse, username):
         user_id = self.fetch_user_id(response.text, username)
-        variables = {
+        varibles = {
             'id': user_id,
             "include_reel": True,
             "include_logged_out_extras": False,
             "first": 100,
         }
+        # url = f'{self.graphql_url}query_hash={self.user_data_hash}&{urlencode(varibles)}'
 
-        url_folowers = f'{self.graphql_url}query_hash={HASHES["followers"]}&{urlencode(variables)}'
+        url_folowers = f'{self.graphql_url}query_hash={HASHES["followers"]}&{urlencode(varibles)}'
 
         yield response.follow(
             url_folowers,
             callback=self.user_folowers_parse,
             cb_kwargs={'username': username,
                        'user_id': user_id,
-                       'varibles': deepcopy(variables)
+                       'varibles': deepcopy(varibles)
                        }
         )
+
+    def user_data(self, response: HtmlResponse, username):
+        j_user_data = json.loads(response.text)
 
     def user_folowers_parse(self, response: HtmlResponse, username, user_id, varibles):
         j_data = json.loads(response.text)
@@ -80,7 +83,7 @@ class InstagramSpider(scrapy.Spider):
                 callback=self.user_folowers_parse,
                 cb_kwargs={'username': username,
                            'user_id': user_id,
-                           'variables': deepcopy(varibles)
+                           'varibles': deepcopy(varibles)
                            }
             )
 
@@ -92,9 +95,6 @@ class InstagramSpider(scrapy.Spider):
                                  data=follower['node']
                                  )
             yield item
-
-    def user_data(self, response: HtmlResponse, username):
-        j_user_data = json.loads(response.text)
 
     def fetch_csrf_token(self, text):
         matched = re.search('\"csrf_token\":\"\\w+\"', text).group()
